@@ -158,11 +158,12 @@ module WxPay
       "<xml>#{params.map { |k, v| "<#{k}>#{v}</#{k}>" }.join}<sign>#{sign}</sign></xml>"
     end
 
-    def self.invoke_remote_with_cert(url, payload, cert = WxPay.apiclient_cert)
+    def self.invoke_remote_with_cert(url, payload, cert = nil)
       # 微信退款、企业付款等需要双向证书
       # https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=9_4
       # https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=4_3
 
+      cert ||= WxPay.apiclient_cert
       invoke_remote(url, payload, {
         ssl_client_cert: cert.certificate,
         ssl_client_key: cert.key,
