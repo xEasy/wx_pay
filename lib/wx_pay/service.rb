@@ -46,10 +46,15 @@ module WxPay
         nonce_str: SecureRandom.uuid.tr('-', ''),
         op_user_id: WxPay.mch_id
       }.merge(params)
+      cert = params.delete(:cert)
 
       check_required_options(params, INVOKE_REFUND_REQUIRED_FIELDS)
 
-      r = invoke_remote_with_cert("#{GATEWAY_URL}/secapi/pay/refund", make_payload(params))
+      r = invoke_remote_with_cert(
+        "#{GATEWAY_URL}/secapi/pay/refund",
+        make_payload(params),
+        cert
+      )
 
       yield(r) if block_given?
 
@@ -63,10 +68,15 @@ module WxPay
         mchid: WxPay.mch_id,
         nonce_str: SecureRandom.uuid.tr('-', '')
       }.merge(params)
+      cert = params.delete(:cert)
 
       check_required_options(params, INVOKE_TRANSFER_REQUIRED_FIELDS)
 
-      r = invoke_remote_with_cert("#{GATEWAY_URL}/mmpaymkttransfers/promotion/transfers", make_payload(params))
+      r = invoke_remote_with_cert(
+        "#{GATEWAY_URL}/mmpaymkttransfers/promotion/transfers",
+        make_payload(params),
+        cert
+      )
 
       yield r if block_given?
 
@@ -148,14 +158,14 @@ module WxPay
       "<xml>#{params.map { |k, v| "<#{k}>#{v}</#{k}>" }.join}<sign>#{sign}</sign></xml>"
     end
 
-    def self.invoke_remote_with_cert(url, payload)
+    def self.invoke_remote_with_cert(url, payload, cert = WxPay.apiclient_cert)
       # 微信退款、企业付款等需要双向证书
       # https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=9_4
       # https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=4_3
 
       invoke_remote(url, payload, {
-        ssl_client_cert: WxPay.apiclient_cert.certificate,
-        ssl_client_key: WxPay.apiclient_cert.key,
+        ssl_client_cert: cert.certificate,
+        ssl_client_key: cert.key,
         verify_ssl: OpenSSL::SSL::VERIFY_NONE
       })
     end
